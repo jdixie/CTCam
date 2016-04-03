@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">CTCam</string>
+    <string name="app_name">Tracker Camera</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <!-- Recording and Storing -->
+    <string name="fn_dialog_title">Video File Name</string>
+    <string name="fn_dialog_file_name">Please Enter Video File Name</string>
+    <string name="fn_dialog_save_button">Save</string>
+    <string name="fn_dialog_cancel_button">Cancel</string>
 </resources>

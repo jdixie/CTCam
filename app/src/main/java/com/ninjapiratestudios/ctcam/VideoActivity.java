@@ -1,89 +1,33 @@
 package com.ninjapiratestudios.ctcam;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.hardware.Camera;
-import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.FrameLayout;
-
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class VideoActivity extends Activity { // implements TextureView.SurfaceTextureListener{
-
-    Camera camera;
-    //CamPreview camPreview;
-    GLCamView glCamView;
-    MediaRecorder mediaRecorder;
-    Overlay overlay;
-    boolean recordingActive;
-    //TextureSurface glTextureSurface;
-    //SurfaceTexture previewTexture;
-    FrameLayout preview;
-
-    //buttons
-    Button recordButton;
+public class VideoActivity extends Activity { // implements TextureView
+    public final static String LOG_TAG = "VIDEO_ACTIVITY";
+    private CameraRecorder cameraRecorder;
+    private int cameraAttempts = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_video);
+    }
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), not working.");
-        } else {
-            Log.d(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), working.");
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        setContentView(R.layout.activity_full_video);
+        // Prepare camera and OpenGL
+        initializeCameraRecorder();
 
-        //captureCamera();
-        recordingActive = false;
-        glCamView = new GLCamView(this);
-        //camPreview = new CamPreview(this, camera);
-        /*try {
-            camera.setPreviewDisplay(camPreview.getHolder());
-        }
-        catch(IOException e)
-        {
-
-        }*/
-        overlay = new Overlay(this);
-        //preview = (FrameLayout) findViewById(R.id.camera_preview);
-        //preview.addView(glCamView);
-        setContentView(glCamView);
-        //mediaRecorder = new MediaRecorder();
-        //mediaRecorder.setCamera(camera);
-        //mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-        //mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        //mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        //mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-
-
-        //add the overlay to the content view
-        //addContentView(overlay, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-
-        //buttons
-        /*recordButton = (Button)findViewById(R.id.button_record);
-        recordButton.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View view){
-                        recordToggle();
-                    }
-                });*/
+        // TODO Temporary, replace when record button is clicked
+        recordButtonListenerTemp();
     }
 
     @Override
@@ -91,121 +35,50 @@ public class VideoActivity extends Activity { // implements TextureView.SurfaceT
         super.onPostCreate(savedInstanceState);
     }
 
-    private boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            return true;
-        } else {
-            return false;
-        }
+    /**
+     * Release resources and end current processing.
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        cameraRecorder.releaseMediaResource();
+        cameraRecorder.releaseCameraResource();
     }
 
-    private void captureCamera() {
-        boolean camp = checkCameraHardware(this);
-        camera = null;
-        try {
-            camera = Camera.open();
-        } catch (Exception e) {
-
-        }
+    // TODO Remove once CameraFragment component is finished
+    private void recordButtonListenerTemp() {
+        cameraRecorder.displayFileNameDialog();
     }
 
-    private void recordToggle() {
-        //not working - fix later
-        /*if(!recordingActive) {
-            //the following line can be adjusted once we have implemented video quality options in a stored config
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-            //use google's method of filenaming
-            mediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
-            //mediaRecorder.setPreviewDisplay(camPreview.getHolder().getSurface());
-            try {
-                mediaRecorder.prepare();
-                mediaRecorder.start();
-                recordingActive = true;
-            } catch (IOException e) {
-                Log.d("mediaRecorder start", "Failed to start recorder");
+    /**
+     * Initializes the CameraRecorder class that is necessary for video
+     * recording and OpenGL functionality.
+     *
+     */
+    private void initializeCameraRecorder() {
+        while (cameraRecorder == null) {
+            cameraRecorder = CameraRecorder.newInstance(this);
+            if (cameraRecorder == null) {
+                // Attempt to acquire camera 3 times if there is an error
+                // retrieving
+                // reference.
+                if (cameraAttempts == 3) {
+                    Log.e(LOG_TAG, "3 Attempts failed to get camera reference");
+                    // TODO Provide graceful app exit in future iteration
+                    finish();
+                } else {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        Log.e(LOG_TAG, "Main UI thread sleep error.");
+                        // TODO Provide graceful app exit in future iteration
+                        finish();
+                    }
+                    cameraAttempts++;
+                }
+            } else {
+                cameraAttempts = 0;
             }
         }
-        else{
-            mediaRecorder.stop();
-            mediaRecorder.reset();
-            mediaRecorder.release();
-            recordingActive = false;
-        }*/
     }
-
-
-    //from google:
-    public static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int MEDIA_TYPE_VIDEO = 2;
-
-    private static File getOutputMediaFile(int type) {
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
-        String state = Environment.getExternalStorageState();
-        if (!Environment.MEDIA_MOUNTED.equals(state) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            //for now, show error eventually
-            return null;
-        }
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "MyCameraApp");
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
-
-        // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
-                return null;
-            }
-        }
-
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File mediaFile;
-        if (type == MEDIA_TYPE_IMAGE) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_" + timeStamp + ".jpg");
-        } else if (type == MEDIA_TYPE_VIDEO) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "VID_" + timeStamp + ".mp4");
-        } else {
-            return null;
-        }
-
-        return mediaFile;
-    }
-
-    /*@Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        try {
-            Camera.Size previewSize = camera.getParameters().getPreviewSize();
-            //previewTexture = new SurfaceTexture(0);
-            //camera.setPreviewDisplay(holder);
-            //glTextureSurface = new TextureSurface(this, surface, height, width);
-            camera.setPreviewTexture(surface);
-            camera.startPreview();
-            //preview.setSurfaceTexture(glTextureSurface.getVideoTexture());
-
-        } catch (IOException e) {
-            //camera preview error
-        }
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        camera.stopPreview();
-        camera.release();
-        return false;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-    }*/
 }

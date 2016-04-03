@@ -172,7 +172,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     //OpenCV's camera frame ready
-    //TODO: work this into a texture from android camera and replace with called method with this functionality?
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         rgba = inputFrame.rgba();
 
@@ -187,6 +186,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
             Mat spectrumLabel = rgba.submat(4, 4 + spectrum.rows(), 70, 70 + spectrum.cols());
             spectrum.copyTo(spectrumLabel);
+
         }
 
         return rgba;
