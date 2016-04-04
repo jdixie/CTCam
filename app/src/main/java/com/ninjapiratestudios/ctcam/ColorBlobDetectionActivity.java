@@ -10,12 +10,14 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -180,6 +182,19 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             List<MatOfPoint> contours = detector.getContours();
             Log.e(TAG, "Contours count: " + contours.size());
             Imgproc.drawContours(rgba, contours, -1, CONTOUR_COLOR);
+
+            //find centroids
+            Moments moments;
+            Point centroid;
+            for(int i = 0; i < contours.size(); i++){
+                moments = Imgproc.moments(contours.get(i));
+
+                centroid = new Point();
+
+                centroid.x = moments.get_m10() / moments.get_m00();
+                centroid.y = moments.get_m01() / moments.get_m00();
+                Log.i("Centroid", centroid.x + ", " + centroid.y);
+            }
 
             Mat colorLabel = rgba.submat(4, 68, 4, 68);
             colorLabel.setTo(blobColorRgba);

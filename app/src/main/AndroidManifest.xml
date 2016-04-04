@@ -16,7 +16,7 @@ package="com.ninjapiratestudios.ctcam">
     android:supportsRtl="true"
     android:theme="@style/AppTheme">
     <activity
-        android:name=".VideoActivity"
+        android:name=".ColorBlobDetectionActivity"
         android:screenOrientation="landscape"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
