@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -12,6 +15,7 @@ public class VideoActivity extends Activity { // implements TextureView
     public final static String LOG_TAG = "VIDEO_ACTIVITY";
     private CameraRecorder cameraRecorder;
     private int cameraAttempts = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +27,11 @@ public class VideoActivity extends Activity { // implements TextureView
     protected void onResume() {
         super.onResume();
 
+        if (!OpenCVLoader.initDebug()) {
+            Log.d("OpenCV", "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+        } else {
+            Log.d("OpenCV", "OpenCV library found inside package. Using it!");
+        }
         // Prepare camera and OpenGL
         initializeCameraRecorder();
 

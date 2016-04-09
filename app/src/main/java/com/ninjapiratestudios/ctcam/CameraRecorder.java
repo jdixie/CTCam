@@ -1,5 +1,6 @@
 package com.ninjapiratestudios.ctcam;
 
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
@@ -17,7 +18,7 @@ import java.io.IOException;
  * @author John Qualls
  * @version 2/27/2016
  */
-public class CameraRecorder {
+public class CameraRecorder{
     public final static String LOG_TAG = "CAMERA_RECORDER";
     public final static String FILE_DIRECTORY = "Tracker_Camera";
     private Camera camera;
@@ -62,6 +63,8 @@ public class CameraRecorder {
             camera.unlock();
             setupCamera();
             mediaRecorder.start();
+            camera.reconnect();
+            cameraPreview.onStartRecord();
             Log.i(LOG_TAG, "Camera recording started");
         } catch (Exception e) {
             // TODO Provide graceful app exit in future iteration
@@ -74,6 +77,7 @@ public class CameraRecorder {
      * Stops Camera recording.
      */
     public void stopRecording() {
+        cameraPreview.onStopRecord();
         mediaRecorder.stop();
         releaseMediaResource();
         camera.lock();
@@ -135,8 +139,7 @@ public class CameraRecorder {
         File filesDir = retrieveFileDirectory();
         File videoFile = new File(filesDir.getPath(), fileName + ".mp4");
         mediaRecorder.setOutputFile(videoFile.toString());
-        mediaRecorder.setVideoSize(cameraPreview.getWidth(), cameraPreview
-                .getHeight());
+        //mediaRecorder.setVideoSize(cameraPreview.getWidth(), cameraPreview.getHeight());
         mediaRecorder.setPreviewDisplay(cameraPreview.getHolder().getSurface());
         Log.i(LOG_TAG, "File saved to: " + videoFile.getPath());
 

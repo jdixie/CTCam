@@ -97,8 +97,9 @@ public class ColorBlobDetector {
         //TODO: consider a max size area to potentially eliminate floors, walls, screens and such. What would be reasonable?
         contours.clear();
         each = tempContours.iterator();
+        MatOfPoint c;
         while (each.hasNext()) {
-            MatOfPoint c = each.next();
+            c = each.next();
             if (Imgproc.contourArea(c) > minContourArea*maxArea) {
                 Core.multiply(c, new Scalar(4,4), c);
                 contours.add(c);
